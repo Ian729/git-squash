@@ -1,0 +1,59 @@
+#!/bin/bash
+
+set -e
+
+usage() {
+  echo "Usage:"
+  echo "  git squash <base-branch>         # e.g., git squash main"
+  echo "  git squash <count>               # e.g., git squash 3"
+  echo "  git squash --sha <commit-sha>    # e.g., git squash --sha abc123"
+  exit 1
+}
+
+# No arguments? Show help
+if [ $# -eq 0 ]; then
+  usage
+fi
+
+# Determine reset target
+if [ "$1" = "--sha" ]; then
+  BASE_COMMIT="$2"
+  if [ -z "$BASE_COMMIT" ]; then
+    echo "Error: no SHA provided after --sha"
+    usage
+  fi
+elif [[ "$1" =~ ^[0-9]+$ ]]; then
+  COUNT="$1"
+  TOTAL_COMMITS=$(git rev-list --count HEAD)
+  if [ "$COUNT" -ge "$TOTAL_COMMITS" ]; then
+    echo "Error: you only have $TOTAL_COMMITS commits, can't squash $COUNT"
+    exit 1
+  fi
+  BASE_COMMIT="HEAD~$COUNT"
+else
+  BASE_BRANCH="$1"
+  BASE_COMMIT=$(git merge-base "$BASE_BRANCH" HEAD)
+  if [ -z "$BASE_COMMIT" ]; then
+    echo "Error: could not find base commit with '$BASE_BRANCH'"
+    exit 1
+  fi
+fi
+
+echo "Squashing commits since $BASE_COMMIT..."
+
+# Soft reset to the base commit
+git reset --soft "$BASE_COMMIT"
+
+# Prompt for commit message
+echo "Enter commit message (leave blank to use default):"
+read -r COMMIT_MSG
+
+if [ -z "$COMMIT_MSG" ]; then
+  COMMIT_MSG="Squashed commit"
+fi
+
+# Create the new squashed commit
+git commit -m "$COMMIT_MSG"
+
+echo "✅ Done. You may want to push with:"
+echo "   git push --force-with-lease"
