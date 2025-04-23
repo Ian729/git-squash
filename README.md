@@ -13,7 +13,7 @@ This tool provides a unified interface to squash commits:
 1. Download the `git-squash` script and save it to a directory in your `$PATH`, e.g.:
 
    ```bash
-   curl -o ~/bin/git-squash https://raw.githubusercontent.com/<your-username>/git-squash/main/git-squash
+   curl -o ~/bin/git-squash https://raw.githubusercontent.com/Ian729/git-squash/main/git-squash
    chmod +x ~/bin/git-squash
     ```
 
